@@ -1,0 +1,105 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1203.v7b_7023424efe">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2097.v33db_b_de764b_e"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2097.v33db_b_de764b_e">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DurabilityHintJobProperty>
+      <hint>PERFORMANCE_OPTIMIZED</hint>
+    </org.jenkinsci.plugins.workflow.job.properties.DurabilityHintJobProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <org.jenkinsci.plugins.gwt.GenericTrigger plugin="generic-webhook-trigger@1.84">
+          <spec></spec>
+          <genericVariables>
+            <org.jenkinsci.plugins.gwt.GenericVariable>
+              <expressionType>JSONPath</expressionType>
+              <key>payload</key>
+              <value>$</value>
+              <regexpFilter></regexpFilter>
+              <defaultValue></defaultValue>
+            </org.jenkinsci.plugins.gwt.GenericVariable>
+          </genericVariables>
+          <regexpFilterText></regexpFilterText>
+          <regexpFilterExpression></regexpFilterExpression>
+          <genericHeaderVariables>
+            <org.jenkinsci.plugins.gwt.GenericHeaderVariable>
+              <key>X-GitHub-Event</key>
+              <regexpFilter></regexpFilter>
+            </org.jenkinsci.plugins.gwt.GenericHeaderVariable>
+          </genericHeaderVariables>
+          <printPostContent>false</printPostContent>
+          <printContributedVariables>false</printContributedVariables>
+          <causeString>Generic Cause</causeString>
+          <token>test</token>
+          <tokenCredentialId></tokenCredentialId>
+          <silentResponse>false</silentResponse>
+          <overrideQuietPeriod>false</overrideQuietPeriod>
+        </org.jenkinsci.plugins.gwt.GenericTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2746.v0da_83a_332669">
+    <script>def artifact_path
+def artifact_name
+
+pipeline {
+    agent any
+    tools {
+        git &quot;git&quot;
+        go &apos;go 1.18&apos;
+
+    }
+    
+    environment {
+        CREDENTIAL_ID = &apos;GIT_ACCOUNT&apos;
+        Repository_Generator = &apos;https://github.com/Samsung/slsa-jenkins-generator&apos;
+    }
+
+    stages {
+        stage(&apos;build target &apos;) {
+            steps {
+                script {
+                    branch = &quot;${env.payload_ref}&quot;
+                    branch = &quot;${branch}&quot;.split(&quot;refs/heads/&quot;)[1]
+                    git branch: &quot;${branch}&quot;, credentialsId: &quot;$CREDENTIAL_ID&quot;, url: &quot;$env.payload_repository_clone_url&quot;
+
+                     //TODO: replace with real build command
+                    sh &apos;echo &quot;hello world&quot; &gt; output.txt&apos;
+                    artifact_path = sh(script: &apos;pwd&apos;, returnStdout: true).trim()
+                    artifact_name = &quot;output.txt&quot;
+                }
+            }
+        }
+        
+        stage(&apos;generate provenance&apos;) {
+            steps {
+                dir(&quot;../workspace&quot;) {
+                    sh &apos;rm -rf slsa-jenkins-generator &amp;&amp; mkdir slsa-jenkins-generator&apos;
+                    
+                    dir(&quot;slsa-jenkins-generator&quot;) {
+                        git branch: &quot;main&quot;, credentialsId: &quot;$CREDENTIAL_ID&quot;, url: &quot;$Repository_Generator&quot;
+                        
+                        // &apos;run generator via docker&apos;
+                        echo &apos;run generator via docker&apos;
+                        sh &quot;docker build . -t scia:slsa-generator&quot;
+                        sh &quot;printenv &gt; ./envlist &amp;&amp; docker run --env-file ./envlist -v \&quot;${artifact_path}\&quot;:\&quot;/artifacts\&quot; scia:slsa-generator -a artifacts/${artifact_name} -o artifacts&quot;
+                    }
+                }
+            }
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
