@@ -1,13 +1,6 @@
 # slsa-jenkins-generator
 A proof-of-concept SLSA provenance generator for Jenkins.
 
-<!-- toc -->
-- [slsa-jenkins-generator](#slsa-jenkins-generator)
-  - [Background](#background)
-  - [Description](#description)
-  - [Example Usage](#example-usage)
-<!-- tocstop -->
-
 ## Background
 
 [SLSA](https://github.com/slsa-framework/slsa) is a framework intended to codify
