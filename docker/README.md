@@ -6,7 +6,7 @@ The payload are pass to this tool through environment variable.
 
 For this action, the following plugins must be installed on Jenkins.
 ```plugins
-"Git", "Docker plugin", "Generic Webhook Trigger Plugin" and "GitHub"
+"Git plugin", "Docker plugin", "Generic Webhook Trigger Plugin", "GitHub plugin" and "Go Plugin"
 ```
 
 ### Usage
