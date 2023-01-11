@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    Can receive any HTTP request, extract any values from JSON or XML for slsa provenance and trigger a job with those values available as variables. Works with GitHub
+</div>

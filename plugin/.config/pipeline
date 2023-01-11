@@ -1,0 +1,130 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1254.v3f64639b_11dd">
+	<actions>
+		<org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+		<org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+			<jobProperties/>
+			<triggers/>
+			<parameters/>
+			<options/>
+		</org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+	</actions>
+	<description></description>
+	<keepDependencies>false</keepDependencies>
+	<properties>
+		<org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+			<triggers>
+				<org.jenkinsci.plugins.gwt.GenericTrigger plugin="generic-webhook-trigger@1.85.2">
+					<spec></spec>
+					<genericVariables>
+						<org.jenkinsci.plugins.gwt.GenericVariable>
+							<expressionType>JSONPath</expressionType>
+							<key>payload</key>
+							<value>$</value>
+							<regexpFilter></regexpFilter>
+							<defaultValue></defaultValue>
+						</org.jenkinsci.plugins.gwt.GenericVariable>
+					</genericVariables>
+					<regexpFilterText></regexpFilterText>
+					<regexpFilterExpression></regexpFilterExpression>
+					<genericHeaderVariables>
+						<org.jenkinsci.plugins.gwt.GenericHeaderVariable>
+							<key>X-GitHub-Event</key>
+							<regexpFilter></regexpFilter>
+						</org.jenkinsci.plugins.gwt.GenericHeaderVariable>
+					</genericHeaderVariables>
+					<printPostContent>false</printPostContent>
+					<printContributedVariables>false</printContributedVariables>
+					<causeString>Generic Cause</causeString>
+					<token>test</token>
+					<tokenCredentialId></tokenCredentialId>
+					<silentResponse>false</silentResponse>
+					<overrideQuietPeriod>false</overrideQuietPeriod>
+					<shouldNotFlattern>false</shouldNotFlattern>
+				</org.jenkinsci.plugins.gwt.GenericTrigger>
+			</triggers>
+		</org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+	</properties>
+	<definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3536.vb_8a_6628079d5">
+		<script>def artifact_path
+
+def output_path
+
+def env_path
+
+
+
+pipeline {
+
+    agent any
+
+    tools {
+
+        git &quot;git&quot;
+
+    }
+
+    stages {
+
+        stage(&apos;build &amp; generate provenance&apos;) {
+
+            steps {
+
+                script {
+
+                    echo &apos;build&apos;
+
+                    branch = &quot;${env.payload_ref}&quot;
+
+                    branch = &quot;${branch}&quot;.split(&quot;refs/heads/&quot;)[1]
+
+                    git branch: &quot;${branch}&quot;, credentialsId: &quot;$CREDENTIAL_ID&quot;, url: &quot;$env.payload_repository_clone_url&quot;
+
+
+
+                    echo &apos;build&apos;
+
+                    //TODO: replace with real build command
+
+                    sh &apos;echo &quot;test&quot; &gt;&gt; test.txt&apos;
+
+
+
+                    env_path = sh(script: &apos;pwd&apos;, returnStdout: true).trim()
+
+                    sh &quot;printenv &gt; ${env_path}/.env&quot;
+
+                    env_path = &quot;${env_path}&quot;+&quot;/.env&quot;
+
+
+
+                    artifact_path = sh(script: &apos;pwd&apos;, returnStdout: true).trim()
+
+                    output_path = &quot;${artifact_path}&quot;
+
+                    artifact_path = &quot;${artifact_path}&quot; + &quot;/test.txt&quot;
+
+                }
+
+                echo &quot;Generate provenance&quot;
+
+                step([$class: &apos;ProvenanceGenerator&apos;, artifact:artifact_path, output:output_path, envpath:env_path])
+
+                sh &quot;cat ${output_path}/provenance.slsa&quot;
+
+                echo &quot;End of generate provenance&quot;
+
+            }
+
+        }
+
+    }
+
+}
+
+</script>
+		<sandbox>true</sandbox>
+	</definition>
+	<triggers/>
+	<disabled>false</disabled>
+</flow-definition>
