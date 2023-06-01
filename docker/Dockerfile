@@ -7,7 +7,7 @@ COPY provenance ./provenance
 
 RUN go mod download && go build -o /out/generator
 
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 COPY --from=build /out/generator /generator
 RUN mkdir /artifacts/
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
