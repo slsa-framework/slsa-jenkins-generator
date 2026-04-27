@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>plain-credentials</artifactId>
-            <version>1.2</version>
+            <version>199.v9f8e1f741799</version>
         </dependency>
     </dependencies>
 
